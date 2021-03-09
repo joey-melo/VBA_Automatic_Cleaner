@@ -1,0 +1,66 @@
+Function Clean_FirstName(first_name As String) As String
+    Clean_FirstName = StrConv(Trim(first_name), vbProperCase)
+End Function
+
+Function Clean_LastName(last_name As String) As String
+    Clean_LastName = StrConv(Trim(last_name), vbProperCase)
+End Function
+
+Function Clean_Phone(phone As String) As String
+    clean_phone_string = ""
+    For c = 1 To Len(phone)
+        If Mid(phone, c, 1) Like "[0-9]" Then
+            clean_phone_string = clean_phone_string & Mid(phone, c, 1)
+        End If
+    Next c
+    
+    If Len(clean_phone_string) = 7 Then
+        clean_phone_string = "599" & clean_phone_string
+    ElseIf Len(clean_phone_string) <> 10 Then
+        Clean_Phone = phone
+        Exit Function
+    End If
+        
+    Clean_Phone = "(" & Left(clean_phone_string, 3) & ") " _
+                  & Mid(clean_phone_string, 4, 3) & "-" _
+                  & Right(clean_phone_string, 4)
+End Function
+
+Function Clean_Email(email As String) As String
+    clean_email_string = ""
+    For c = 1 To Len(email)
+        If Mid(email, c, 1) <> " " Then
+            clean_email_string = clean_email_string & Mid(email, c, 1)
+        End If
+    Next c
+
+    Clean_Email = LCase(clean_email_string)
+End Function
+
+Function Validate_Email(email As String) As Boolean
+    Dim tblDomains As ListObject
+    Set tblDomains = Sheets("Domains").ListObjects("tblDomains")
+    
+    For Each domain In tblDomains.DataBodyRange
+        If email Like "*@" & domain Then
+            Validate_Email = True
+            Exit Function
+        End If
+    Next domain
+    
+    Validate_Email = False
+End Function
+
+Sub Clean_Data()
+    Dim tblClean As ListObject
+    Set tblClean = Sheets("Dirty Data").ListObjects("tblClean")
+    
+    For Each r In tblClean.ListColumns(1).DataBodyRange.Rows
+        r.Offset(0, 1) = Clean_FirstName(r.Offset(0, 1))
+        r.Offset(0, 2) = Clean_LastName(r.Offset(0, 2))
+        r.Offset(0, 3) = Clean_Phone(r.Offset(0, 3))
+        r.Offset(0, 4) = Clean_Email(r.Offset(0, 4))
+        If Validate_Email(r.Offset(0, 4)) = False Then r.Offset(0, 4).Cells.Interior.ColorIndex = 3
+    Next r
+    
+End Sub
